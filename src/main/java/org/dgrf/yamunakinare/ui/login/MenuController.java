@@ -10,10 +10,9 @@ import javax.annotation.PostConstruct;
 import javax.inject.Named;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import org.dgrf.cms.core.client.MenuClient;
-import org.dgrf.cms.core.driver.CMSClientService;
-import org.dgrf.cms.dto.MenuDTO;
-import org.dgrf.cms.dto.MenuNode;
+
+
+
 import org.primefaces.model.menu.DefaultMenuItem;
 
 import org.primefaces.model.menu.DefaultMenuModel;
@@ -31,7 +30,7 @@ import org.primefaces.model.menu.MenuModel;
 public class MenuController {
 
     private MenuModel menuModel;
-    private CMSClientService ms;
+
     /**
      * Creates a new instance of MenuController
      */
@@ -50,50 +49,20 @@ public class MenuController {
             
             menuModel = new DefaultMenuModel();
 
-            MenuDTO menuDTO = new MenuDTO();
-            menuDTO.setAuthCredentials(CMSClientAuthCredentialValue.AUTH_CREDENTIALS);
-            MenuClient menuListGet = new MenuClient();
-            menuDTO = menuListGet.getMenuTree(menuDTO);
-            MenuNode authorisedMenuRoot = menuDTO.getRootMenuNode();
-            List<MenuNode> rootMenuForest = authorisedMenuRoot.getChildren();
-            DefaultSubMenu rootMenu = new DefaultSubMenu("User Menu");
-            ms = new CMSClientService();
-            buildMultiMenu(rootMenuForest, rootMenu);
-            List<MenuElement> userMenuList = rootMenu.getElements();
-            for (MenuElement userMenu : userMenuList) {
-                menuModel.addElement(userMenu);
-            }
-            DefaultMenuItem browseTerms = new DefaultMenuItem("Browse");
-            String termBrowseUrl = "/cms/browse/RootTermList?faces-redirect=true";
-            browseTerms.setOutcome(termBrowseUrl);
-            menuModel.addElement(browseTerms);
+            
+            //DefaultSubMenu rootMenu = new DefaultSubMenu("User Menu");
+            
+            
+            DefaultMenuItem articleList = new DefaultMenuItem("Browse");
+            String termBrowseUrl = "/edit/ArticleList?faces-redirect=true";
+            articleList.setOutcome(termBrowseUrl);
+            menuModel.addElement(articleList);
             //menuModel.addElement(menuMaker.getUserMenu());
 
         }
     }
 
-    private void buildMultiMenu(List<MenuNode> menuForest, DefaultSubMenu userMenu) {
-        for (MenuNode menuNode : menuForest) {
-
-            if (menuNode.getChildren() == null) {
-                //this is a leaf node
-                DefaultMenuItem userMenuLeafNode;
-                String termName = menuNode.getTermName();
-                String termUrl = menuNode.getTermUrl();
-                termUrl = "/cms" + termUrl + "?faces-redirect=true&termslug=" + menuNode.getTermSlug();
-                userMenuLeafNode = new DefaultMenuItem(termName);
-                userMenuLeafNode.setOutcome(termUrl);
-                userMenu.addElement(userMenuLeafNode);
-            } else {
-                //this is not a leaf node
-                DefaultSubMenu userMenuNode = new DefaultSubMenu(menuNode.getName());
-                userMenu.addElement(userMenuNode);
-                buildMultiMenu(menuNode.getChildren(), userMenuNode);
-
-            }
-        }
-    }
-
+    
     public MenuModel getMenuModel() {
         return menuModel;
     }

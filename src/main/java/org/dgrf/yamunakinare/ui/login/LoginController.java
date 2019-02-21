@@ -30,10 +30,6 @@ import org.dgrf.cloud.client.UserAuthClient;
 import org.dgrf.cloud.response.DGRFResponseCode;
 
 import org.dgrf.cloud.dto.DGRFCloudAuthCredentials;
-import org.dgrf.cms.constants.AppearenceMeta;
-import org.dgrf.cms.constants.CMSConstants;
-import org.dgrf.cms.dto.TermInstanceDTO;
-import org.dgrf.cms.constants.MediaMeta;
 
 /**
  *
@@ -202,11 +198,11 @@ public class LoginController implements Serializable {
         sb.deleteCharAt(0);
 
         
-        productName = sb.toString();
-        productCaption = "Time you enjoy wasting is not wasted time.";
+        productName = "যমুনা কিনারে";
+        productCaption = "হরিণনেত্রে বিমল হাস, কুঞ্জবনমে আও লো...";
         selectedTheme = "css/term-blue.css";
         homeScreenLogo = contextPath + "/faces/javax.faces.resource/yamuna/images/default-butterfly.png";
-        iconAndLogo = contextPath + "/faces/javax.faces.resource/yamuna/images/dgrflogo.png";
+        iconAndLogo = contextPath + "/faces/javax.faces.resource/yamuna/images/yamunalogo.png";
         selectedHomeImg = contextPath + "/faces/javax.faces.resource/yamuna/images/dgrf-default-home-img.jpg";
         setAuthCredentials();
 

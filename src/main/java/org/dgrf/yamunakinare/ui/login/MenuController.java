@@ -54,7 +54,7 @@ public class MenuController {
             
             
             DefaultMenuItem articleList = new DefaultMenuItem("Browse");
-            String termBrowseUrl = "/edit/ArticleList?faces-redirect=true";
+            String termBrowseUrl = "/edit/ArticleTypeList?faces-redirect=true";
             articleList.setOutcome(termBrowseUrl);
             menuModel.addElement(articleList);
             //menuModel.addElement(menuMaker.getUserMenu());

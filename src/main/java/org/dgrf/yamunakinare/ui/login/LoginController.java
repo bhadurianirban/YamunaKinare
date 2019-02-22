@@ -30,6 +30,8 @@ import org.dgrf.cloud.client.UserAuthClient;
 import org.dgrf.cloud.response.DGRFResponseCode;
 
 import org.dgrf.cloud.dto.DGRFCloudAuthCredentials;
+import org.dgrf.cloud.dto.DataConnDTO;
+import org.dgrf.yamunakinare.db.DAO.DatabaseConnection;
 
 /**
  *
@@ -97,6 +99,7 @@ public class LoginController implements Serializable {
         if (userAuthDTO.getResponseCode() == DGRFResponseCode.SUCCESS) {
         
             setAuthCredentials(userAuthDTO);
+            setDataConnection();
             
             return "Landing";
         } else {
@@ -107,7 +110,10 @@ public class LoginController implements Serializable {
         }
 
     }
-
+    private void setDataConnection() {
+        DataConnDTO dataConnDTO = CMSAuthentication.authenticateSubcription(YamunaClientAuthCredentialValue.AUTH_CREDENTIALS);
+        DatabaseConnection dc = new DatabaseConnection(dataConnDTO.getDbAdminUser(), dataConnDTO.getDbAdminPassword(), dataConnDTO.getDbConnUrl());
+    }
     public String logout() {
         userAuthDTO.setUserId(null);
         userID = null;
@@ -217,14 +223,14 @@ public class LoginController implements Serializable {
         authCredentials.setUserId(userAuthDTO.getUserId());
         authCredentials.setPassword(userAuthDTO.getPassword());
         authCredentials.setRoleId(userAuthDTO.getRoleId());
-        CMSClientAuthCredentialValue.AUTH_CREDENTIALS = authCredentials;
+        YamunaClientAuthCredentialValue.AUTH_CREDENTIALS = authCredentials;
 
     }
     private void setAuthCredentials() {
         DGRFCloudAuthCredentials authCredentials = new DGRFCloudAuthCredentials();
         authCredentials.setProductId(productID);
         authCredentials.setTenantId(tenantID);
-        CMSClientAuthCredentialValue.AUTH_CREDENTIALS = authCredentials;
+        YamunaClientAuthCredentialValue.AUTH_CREDENTIALS = authCredentials;
 
     }    
 

@@ -11,7 +11,7 @@ import org.dgrf.cloud.dto.DGRFCloudAuthCredentials;
  *
  * @author dgrfv
  */
-public class CMSClientAuthCredentialValue {
+public class YamunaClientAuthCredentialValue {
     public static DGRFCloudAuthCredentials AUTH_CREDENTIALS;
     
 }

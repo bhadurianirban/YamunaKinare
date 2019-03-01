@@ -13,33 +13,25 @@ import javax.validation.constraints.NotNull;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 @Embeddable
 public class TaxonomyPK implements Serializable {
 
     @Basic(optional = false)
     @NotNull
-    @Column(name = "id")
-    private int id;
-    @Basic(optional = false)
-    @NotNull
     @Column(name = "taxonomy_types_id")
     private int taxonomyTypesId;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "id")
+    private int id;
 
     public TaxonomyPK() {
     }
 
-    public TaxonomyPK(int id, int taxonomyTypesId) {
-        this.id = id;
+    public TaxonomyPK(int taxonomyTypesId, int id) {
         this.taxonomyTypesId = taxonomyTypesId;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
         this.id = id;
     }
 
@@ -51,11 +43,19 @@ public class TaxonomyPK implements Serializable {
         this.taxonomyTypesId = taxonomyTypesId;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (int) id;
         hash += (int) taxonomyTypesId;
+        hash += (int) id;
         return hash;
     }
 
@@ -66,10 +66,10 @@ public class TaxonomyPK implements Serializable {
             return false;
         }
         TaxonomyPK other = (TaxonomyPK) object;
-        if (this.id != other.id) {
+        if (this.taxonomyTypesId != other.taxonomyTypesId) {
             return false;
         }
-        if (this.taxonomyTypesId != other.taxonomyTypesId) {
+        if (this.id != other.id) {
             return false;
         }
         return true;
@@ -77,7 +77,7 @@ public class TaxonomyPK implements Serializable {
 
     @Override
     public String toString() {
-        return "org.dgrf.yamunakinare.db.entities.TaxonomyPK[ id=" + id + ", taxonomyTypesId=" + taxonomyTypesId + " ]";
+        return "org.dgrf.yamunakinare.db.entities.TaxonomyPK[ taxonomyTypesId=" + taxonomyTypesId + ", id=" + id + " ]";
     }
     
 }

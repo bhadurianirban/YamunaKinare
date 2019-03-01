@@ -11,20 +11,20 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import org.dgrf.yamunakinare.db.entities.TaxonomyTypes;
-import org.dgrf.yamunakinare.db.entities.TaxonomyKirtanXref;
+import org.dgrf.yamunakinare.db.entities.Bishoy;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import org.dgrf.yamunakinare.db.JPA.exceptions.IllegalOrphanException;
 import org.dgrf.yamunakinare.db.JPA.exceptions.NonexistentEntityException;
 import org.dgrf.yamunakinare.db.JPA.exceptions.PreexistingEntityException;
+import org.dgrf.yamunakinare.db.entities.Kirtan;
 import org.dgrf.yamunakinare.db.entities.Taxonomy;
 import org.dgrf.yamunakinare.db.entities.TaxonomyPK;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 public class TaxonomyJpaController implements Serializable {
 
@@ -37,25 +37,17 @@ public class TaxonomyJpaController implements Serializable {
         return emf.createEntityManager();
     }
 
-    public void create(Taxonomy taxonomy) throws IllegalOrphanException, PreexistingEntityException, Exception {
+    public void create(Taxonomy taxonomy) throws PreexistingEntityException, Exception {
         if (taxonomy.getTaxonomyPK() == null) {
             taxonomy.setTaxonomyPK(new TaxonomyPK());
         }
+        if (taxonomy.getBishoyList() == null) {
+            taxonomy.setBishoyList(new ArrayList<Bishoy>());
+        }
+        if (taxonomy.getKirtanList() == null) {
+            taxonomy.setKirtanList(new ArrayList<Kirtan>());
+        }
         taxonomy.getTaxonomyPK().setTaxonomyTypesId(taxonomy.getTaxonomyTypes().getId());
-        List<String> illegalOrphanMessages = null;
-        TaxonomyTypes taxonomyTypesOrphanCheck = taxonomy.getTaxonomyTypes();
-        if (taxonomyTypesOrphanCheck != null) {
-            Taxonomy oldTaxonomyOfTaxonomyTypes = taxonomyTypesOrphanCheck.getTaxonomy();
-            if (oldTaxonomyOfTaxonomyTypes != null) {
-                if (illegalOrphanMessages == null) {
-                    illegalOrphanMessages = new ArrayList<String>();
-                }
-                illegalOrphanMessages.add("The TaxonomyTypes " + taxonomyTypesOrphanCheck + " already has an item of type Taxonomy whose taxonomyTypes column cannot be null. Please make another selection for the taxonomyTypes field.");
-            }
-        }
-        if (illegalOrphanMessages != null) {
-            throw new IllegalOrphanException(illegalOrphanMessages);
-        }
         EntityManager em = null;
         try {
             em = getEntityManager();
@@ -65,24 +57,30 @@ public class TaxonomyJpaController implements Serializable {
                 taxonomyTypes = em.getReference(taxonomyTypes.getClass(), taxonomyTypes.getId());
                 taxonomy.setTaxonomyTypes(taxonomyTypes);
             }
-            TaxonomyKirtanXref taxonomyKirtanXref = taxonomy.getTaxonomyKirtanXref();
-            if (taxonomyKirtanXref != null) {
-                taxonomyKirtanXref = em.getReference(taxonomyKirtanXref.getClass(), taxonomyKirtanXref.getTaxonomyKirtanXrefPK());
-                taxonomy.setTaxonomyKirtanXref(taxonomyKirtanXref);
+            List<Bishoy> attachedBishoyList = new ArrayList<Bishoy>();
+            for (Bishoy bishoyListBishoyToAttach : taxonomy.getBishoyList()) {
+                bishoyListBishoyToAttach = em.getReference(bishoyListBishoyToAttach.getClass(), bishoyListBishoyToAttach.getId());
+                attachedBishoyList.add(bishoyListBishoyToAttach);
             }
+            taxonomy.setBishoyList(attachedBishoyList);
+            List<Kirtan> attachedKirtanList = new ArrayList<Kirtan>();
+            for (Kirtan kirtanListKirtanToAttach : taxonomy.getKirtanList()) {
+                kirtanListKirtanToAttach = em.getReference(kirtanListKirtanToAttach.getClass(), kirtanListKirtanToAttach.getId());
+                attachedKirtanList.add(kirtanListKirtanToAttach);
+            }
+            taxonomy.setKirtanList(attachedKirtanList);
             em.persist(taxonomy);
             if (taxonomyTypes != null) {
-                taxonomyTypes.setTaxonomy(taxonomy);
+                taxonomyTypes.getTaxonomyList().add(taxonomy);
                 taxonomyTypes = em.merge(taxonomyTypes);
             }
-            if (taxonomyKirtanXref != null) {
-                Taxonomy oldTaxonomyOfTaxonomyKirtanXref = taxonomyKirtanXref.getTaxonomy();
-                if (oldTaxonomyOfTaxonomyKirtanXref != null) {
-                    oldTaxonomyOfTaxonomyKirtanXref.setTaxonomyKirtanXref(null);
-                    oldTaxonomyOfTaxonomyKirtanXref = em.merge(oldTaxonomyOfTaxonomyKirtanXref);
-                }
-                taxonomyKirtanXref.setTaxonomy(taxonomy);
-                taxonomyKirtanXref = em.merge(taxonomyKirtanXref);
+            for (Bishoy bishoyListBishoy : taxonomy.getBishoyList()) {
+                bishoyListBishoy.getTaxonomyList().add(taxonomy);
+                bishoyListBishoy = em.merge(bishoyListBishoy);
+            }
+            for (Kirtan kirtanListKirtan : taxonomy.getKirtanList()) {
+                kirtanListKirtan.getTaxonomyList().add(taxonomy);
+                kirtanListKirtan = em.merge(kirtanListKirtan);
             }
             em.getTransaction().commit();
         } catch (Exception ex) {
@@ -97,7 +95,7 @@ public class TaxonomyJpaController implements Serializable {
         }
     }
 
-    public void edit(Taxonomy taxonomy) throws IllegalOrphanException, NonexistentEntityException, Exception {
+    public void edit(Taxonomy taxonomy) throws NonexistentEntityException, Exception {
         taxonomy.getTaxonomyPK().setTaxonomyTypesId(taxonomy.getTaxonomyTypes().getId());
         EntityManager em = null;
         try {
@@ -106,52 +104,60 @@ public class TaxonomyJpaController implements Serializable {
             Taxonomy persistentTaxonomy = em.find(Taxonomy.class, taxonomy.getTaxonomyPK());
             TaxonomyTypes taxonomyTypesOld = persistentTaxonomy.getTaxonomyTypes();
             TaxonomyTypes taxonomyTypesNew = taxonomy.getTaxonomyTypes();
-            TaxonomyKirtanXref taxonomyKirtanXrefOld = persistentTaxonomy.getTaxonomyKirtanXref();
-            TaxonomyKirtanXref taxonomyKirtanXrefNew = taxonomy.getTaxonomyKirtanXref();
-            List<String> illegalOrphanMessages = null;
-            if (taxonomyTypesNew != null && !taxonomyTypesNew.equals(taxonomyTypesOld)) {
-                Taxonomy oldTaxonomyOfTaxonomyTypes = taxonomyTypesNew.getTaxonomy();
-                if (oldTaxonomyOfTaxonomyTypes != null) {
-                    if (illegalOrphanMessages == null) {
-                        illegalOrphanMessages = new ArrayList<String>();
-                    }
-                    illegalOrphanMessages.add("The TaxonomyTypes " + taxonomyTypesNew + " already has an item of type Taxonomy whose taxonomyTypes column cannot be null. Please make another selection for the taxonomyTypes field.");
-                }
-            }
-            if (taxonomyKirtanXrefOld != null && !taxonomyKirtanXrefOld.equals(taxonomyKirtanXrefNew)) {
-                if (illegalOrphanMessages == null) {
-                    illegalOrphanMessages = new ArrayList<String>();
-                }
-                illegalOrphanMessages.add("You must retain TaxonomyKirtanXref " + taxonomyKirtanXrefOld + " since its taxonomy field is not nullable.");
-            }
-            if (illegalOrphanMessages != null) {
-                throw new IllegalOrphanException(illegalOrphanMessages);
-            }
+            List<Bishoy> bishoyListOld = persistentTaxonomy.getBishoyList();
+            List<Bishoy> bishoyListNew = taxonomy.getBishoyList();
+            List<Kirtan> kirtanListOld = persistentTaxonomy.getKirtanList();
+            List<Kirtan> kirtanListNew = taxonomy.getKirtanList();
             if (taxonomyTypesNew != null) {
                 taxonomyTypesNew = em.getReference(taxonomyTypesNew.getClass(), taxonomyTypesNew.getId());
                 taxonomy.setTaxonomyTypes(taxonomyTypesNew);
             }
-            if (taxonomyKirtanXrefNew != null) {
-                taxonomyKirtanXrefNew = em.getReference(taxonomyKirtanXrefNew.getClass(), taxonomyKirtanXrefNew.getTaxonomyKirtanXrefPK());
-                taxonomy.setTaxonomyKirtanXref(taxonomyKirtanXrefNew);
+            List<Bishoy> attachedBishoyListNew = new ArrayList<Bishoy>();
+            for (Bishoy bishoyListNewBishoyToAttach : bishoyListNew) {
+                bishoyListNewBishoyToAttach = em.getReference(bishoyListNewBishoyToAttach.getClass(), bishoyListNewBishoyToAttach.getId());
+                attachedBishoyListNew.add(bishoyListNewBishoyToAttach);
             }
+            bishoyListNew = attachedBishoyListNew;
+            taxonomy.setBishoyList(bishoyListNew);
+            List<Kirtan> attachedKirtanListNew = new ArrayList<Kirtan>();
+            for (Kirtan kirtanListNewKirtanToAttach : kirtanListNew) {
+                kirtanListNewKirtanToAttach = em.getReference(kirtanListNewKirtanToAttach.getClass(), kirtanListNewKirtanToAttach.getId());
+                attachedKirtanListNew.add(kirtanListNewKirtanToAttach);
+            }
+            kirtanListNew = attachedKirtanListNew;
+            taxonomy.setKirtanList(kirtanListNew);
             taxonomy = em.merge(taxonomy);
             if (taxonomyTypesOld != null && !taxonomyTypesOld.equals(taxonomyTypesNew)) {
-                taxonomyTypesOld.setTaxonomy(null);
+                taxonomyTypesOld.getTaxonomyList().remove(taxonomy);
                 taxonomyTypesOld = em.merge(taxonomyTypesOld);
             }
             if (taxonomyTypesNew != null && !taxonomyTypesNew.equals(taxonomyTypesOld)) {
-                taxonomyTypesNew.setTaxonomy(taxonomy);
+                taxonomyTypesNew.getTaxonomyList().add(taxonomy);
                 taxonomyTypesNew = em.merge(taxonomyTypesNew);
             }
-            if (taxonomyKirtanXrefNew != null && !taxonomyKirtanXrefNew.equals(taxonomyKirtanXrefOld)) {
-                Taxonomy oldTaxonomyOfTaxonomyKirtanXref = taxonomyKirtanXrefNew.getTaxonomy();
-                if (oldTaxonomyOfTaxonomyKirtanXref != null) {
-                    oldTaxonomyOfTaxonomyKirtanXref.setTaxonomyKirtanXref(null);
-                    oldTaxonomyOfTaxonomyKirtanXref = em.merge(oldTaxonomyOfTaxonomyKirtanXref);
+            for (Bishoy bishoyListOldBishoy : bishoyListOld) {
+                if (!bishoyListNew.contains(bishoyListOldBishoy)) {
+                    bishoyListOldBishoy.getTaxonomyList().remove(taxonomy);
+                    bishoyListOldBishoy = em.merge(bishoyListOldBishoy);
                 }
-                taxonomyKirtanXrefNew.setTaxonomy(taxonomy);
-                taxonomyKirtanXrefNew = em.merge(taxonomyKirtanXrefNew);
+            }
+            for (Bishoy bishoyListNewBishoy : bishoyListNew) {
+                if (!bishoyListOld.contains(bishoyListNewBishoy)) {
+                    bishoyListNewBishoy.getTaxonomyList().add(taxonomy);
+                    bishoyListNewBishoy = em.merge(bishoyListNewBishoy);
+                }
+            }
+            for (Kirtan kirtanListOldKirtan : kirtanListOld) {
+                if (!kirtanListNew.contains(kirtanListOldKirtan)) {
+                    kirtanListOldKirtan.getTaxonomyList().remove(taxonomy);
+                    kirtanListOldKirtan = em.merge(kirtanListOldKirtan);
+                }
+            }
+            for (Kirtan kirtanListNewKirtan : kirtanListNew) {
+                if (!kirtanListOld.contains(kirtanListNewKirtan)) {
+                    kirtanListNewKirtan.getTaxonomyList().add(taxonomy);
+                    kirtanListNewKirtan = em.merge(kirtanListNewKirtan);
+                }
             }
             em.getTransaction().commit();
         } catch (Exception ex) {
@@ -170,7 +176,7 @@ public class TaxonomyJpaController implements Serializable {
         }
     }
 
-    public void destroy(TaxonomyPK id) throws IllegalOrphanException, NonexistentEntityException {
+    public void destroy(TaxonomyPK id) throws NonexistentEntityException {
         EntityManager em = null;
         try {
             em = getEntityManager();
@@ -182,21 +188,20 @@ public class TaxonomyJpaController implements Serializable {
             } catch (EntityNotFoundException enfe) {
                 throw new NonexistentEntityException("The taxonomy with id " + id + " no longer exists.", enfe);
             }
-            List<String> illegalOrphanMessages = null;
-            TaxonomyKirtanXref taxonomyKirtanXrefOrphanCheck = taxonomy.getTaxonomyKirtanXref();
-            if (taxonomyKirtanXrefOrphanCheck != null) {
-                if (illegalOrphanMessages == null) {
-                    illegalOrphanMessages = new ArrayList<String>();
-                }
-                illegalOrphanMessages.add("This Taxonomy (" + taxonomy + ") cannot be destroyed since the TaxonomyKirtanXref " + taxonomyKirtanXrefOrphanCheck + " in its taxonomyKirtanXref field has a non-nullable taxonomy field.");
-            }
-            if (illegalOrphanMessages != null) {
-                throw new IllegalOrphanException(illegalOrphanMessages);
-            }
             TaxonomyTypes taxonomyTypes = taxonomy.getTaxonomyTypes();
             if (taxonomyTypes != null) {
-                taxonomyTypes.setTaxonomy(null);
+                taxonomyTypes.getTaxonomyList().remove(taxonomy);
                 taxonomyTypes = em.merge(taxonomyTypes);
+            }
+            List<Bishoy> bishoyList = taxonomy.getBishoyList();
+            for (Bishoy bishoyListBishoy : bishoyList) {
+                bishoyListBishoy.getTaxonomyList().remove(taxonomy);
+                bishoyListBishoy = em.merge(bishoyListBishoy);
+            }
+            List<Kirtan> kirtanList = taxonomy.getKirtanList();
+            for (Kirtan kirtanListKirtan : kirtanList) {
+                kirtanListKirtan.getTaxonomyList().remove(taxonomy);
+                kirtanListKirtan = em.merge(kirtanListKirtan);
             }
             em.remove(taxonomy);
             em.getTransaction().commit();

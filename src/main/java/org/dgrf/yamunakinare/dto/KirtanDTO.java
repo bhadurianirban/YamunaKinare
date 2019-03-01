@@ -9,10 +9,10 @@ package org.dgrf.yamunakinare.dto;
  *
  * @author bhaduri
  */
-public class ArticleTypeDTO {
+public class KirtanDTO {
     private Integer id;
     private String name;
-    private String description;
+    private String content;
 
     public Integer getId() {
         return id;
@@ -30,12 +30,13 @@ public class ArticleTypeDTO {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getContent() {
+        return content;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setContent(String content) {
+        this.content = content;
     }
+
     
 }

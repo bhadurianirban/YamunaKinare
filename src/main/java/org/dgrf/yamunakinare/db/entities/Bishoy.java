@@ -6,30 +6,32 @@
 package org.dgrf.yamunakinare.db.entities;
 
 import java.io.Serializable;
+import java.util.List;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Lob;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 @Entity
-@Table(name = "article_type")
+@Table(name = "bishoy")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "ArticleType.findAll", query = "SELECT a FROM ArticleType a")})
-public class ArticleType implements Serializable {
+    @NamedQuery(name = "Bishoy.findAll", query = "SELECT b FROM Bishoy b")})
+public class Bishoy implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -37,22 +39,23 @@ public class ArticleType implements Serializable {
     @NotNull
     @Column(name = "id")
     private Integer id;
-    @Size(max = 255)
+    @Size(max = 45)
     @Column(name = "name")
     private String name;
-    @Lob
-    @Size(max = 2147483647)
-    @Column(name = "description")
-    private String description;
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "articleType")
-    private ArticleTypeMetaDefinition articleTypeMetaDefinition;
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "articleType")
-    private Articles articles;
+    @Size(max = 45)
+    @Column(name = "content")
+    private String content;
+    @JoinTable(name = "taxonomy_has_bishoy", joinColumns = {
+        @JoinColumn(name = "bishoy_id", referencedColumnName = "id")}, inverseJoinColumns = {
+        @JoinColumn(name = "taxonomy_taxonomy_types_id", referencedColumnName = "taxonomy_types_id"),
+        @JoinColumn(name = "taxonomy_id", referencedColumnName = "id")})
+    @ManyToMany
+    private List<Taxonomy> taxonomyList;
 
-    public ArticleType() {
+    public Bishoy() {
     }
 
-    public ArticleType(Integer id) {
+    public Bishoy(Integer id) {
         this.id = id;
     }
 
@@ -72,28 +75,21 @@ public class ArticleType implements Serializable {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getContent() {
+        return content;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setContent(String content) {
+        this.content = content;
     }
 
-    public ArticleTypeMetaDefinition getArticleTypeMetaDefinition() {
-        return articleTypeMetaDefinition;
+    @XmlTransient
+    public List<Taxonomy> getTaxonomyList() {
+        return taxonomyList;
     }
 
-    public void setArticleTypeMetaDefinition(ArticleTypeMetaDefinition articleTypeMetaDefinition) {
-        this.articleTypeMetaDefinition = articleTypeMetaDefinition;
-    }
-
-    public Articles getArticles() {
-        return articles;
-    }
-
-    public void setArticles(Articles articles) {
-        this.articles = articles;
+    public void setTaxonomyList(List<Taxonomy> taxonomyList) {
+        this.taxonomyList = taxonomyList;
     }
 
     @Override
@@ -106,10 +102,10 @@ public class ArticleType implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof ArticleType)) {
+        if (!(object instanceof Bishoy)) {
             return false;
         }
-        ArticleType other = (ArticleType) object;
+        Bishoy other = (Bishoy) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
@@ -118,7 +114,7 @@ public class ArticleType implements Serializable {
 
     @Override
     public String toString() {
-        return "org.dgrf.yamunakinare.db.entities.ArticleType[ id=" + id + " ]";
+        return "org.dgrf.yamunakinare.db.entities.Bishoy[ id=" + id + " ]";
     }
     
 }

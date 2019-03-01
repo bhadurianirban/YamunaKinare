@@ -6,25 +6,26 @@
 package org.dgrf.yamunakinare.db.entities;
 
 import java.io.Serializable;
+import java.util.List;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 @Entity
 @Table(name = "taxonomy")
@@ -50,13 +51,13 @@ public class Taxonomy implements Serializable {
     @NotNull
     @Column(name = "parent_id")
     private int parentId;
-    @JoinColumns({
-        @JoinColumn(name = "taxonomy_types_id", referencedColumnName = "id", insertable = false, updatable = false),
-        @JoinColumn(name = "taxonomy_types_id", referencedColumnName = "id", insertable = false, updatable = false)})
-    @OneToOne(optional = false)
+    @ManyToMany(mappedBy = "taxonomyList")
+    private List<Bishoy> bishoyList;
+    @ManyToMany(mappedBy = "taxonomyList")
+    private List<Kirtan> kirtanList;
+    @JoinColumn(name = "taxonomy_types_id", referencedColumnName = "id", insertable = false, updatable = false)
+    @ManyToOne(optional = false)
     private TaxonomyTypes taxonomyTypes;
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "taxonomy")
-    private TaxonomyKirtanXref taxonomyKirtanXref;
 
     public Taxonomy() {
     }
@@ -71,8 +72,8 @@ public class Taxonomy implements Serializable {
         this.parentId = parentId;
     }
 
-    public Taxonomy(int id, int taxonomyTypesId) {
-        this.taxonomyPK = new TaxonomyPK(id, taxonomyTypesId);
+    public Taxonomy(int taxonomyTypesId, int id) {
+        this.taxonomyPK = new TaxonomyPK(taxonomyTypesId, id);
     }
 
     public TaxonomyPK getTaxonomyPK() {
@@ -107,20 +108,30 @@ public class Taxonomy implements Serializable {
         this.parentId = parentId;
     }
 
+    @XmlTransient
+    public List<Bishoy> getBishoyList() {
+        return bishoyList;
+    }
+
+    public void setBishoyList(List<Bishoy> bishoyList) {
+        this.bishoyList = bishoyList;
+    }
+
+    @XmlTransient
+    public List<Kirtan> getKirtanList() {
+        return kirtanList;
+    }
+
+    public void setKirtanList(List<Kirtan> kirtanList) {
+        this.kirtanList = kirtanList;
+    }
+
     public TaxonomyTypes getTaxonomyTypes() {
         return taxonomyTypes;
     }
 
     public void setTaxonomyTypes(TaxonomyTypes taxonomyTypes) {
         this.taxonomyTypes = taxonomyTypes;
-    }
-
-    public TaxonomyKirtanXref getTaxonomyKirtanXref() {
-        return taxonomyKirtanXref;
-    }
-
-    public void setTaxonomyKirtanXref(TaxonomyKirtanXref taxonomyKirtanXref) {
-        this.taxonomyKirtanXref = taxonomyKirtanXref;
     }
 
     @Override

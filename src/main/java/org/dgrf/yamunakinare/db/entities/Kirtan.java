@@ -8,14 +8,15 @@ package org.dgrf.yamunakinare.db.entities;
 import java.io.Serializable;
 import java.util.List;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -27,11 +28,11 @@ import javax.xml.bind.annotation.XmlTransient;
  * @author dgrfi
  */
 @Entity
-@Table(name = "taxonomy_types")
+@Table(name = "kirtan")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "TaxonomyTypes.findAll", query = "SELECT t FROM TaxonomyTypes t")})
-public class TaxonomyTypes implements Serializable {
+    @NamedQuery(name = "Kirtan.findAll", query = "SELECT k FROM Kirtan k")})
+public class Kirtan implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -41,26 +42,34 @@ public class TaxonomyTypes implements Serializable {
     private Integer id;
     @Basic(optional = false)
     @NotNull
-    @Size(min = 1, max = 45)
+    @Lob
+    @Size(min = 1, max = 65535)
     @Column(name = "name")
     private String name;
+    @Basic(optional = false)
+    @NotNull
     @Lob
-    @Size(max = 2147483647)
-    @Column(name = "description")
-    private String description;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "taxonomyTypes")
+    @Size(min = 1, max = 2147483647)
+    @Column(name = "content")
+    private String content;
+    @JoinTable(name = "taxonomy_has_kirtan", joinColumns = {
+        @JoinColumn(name = "kirtan_id", referencedColumnName = "id")}, inverseJoinColumns = {
+        @JoinColumn(name = "taxonomy_taxonomy_types_id", referencedColumnName = "taxonomy_types_id"),
+        @JoinColumn(name = "taxonomy_id", referencedColumnName = "id")})
+    @ManyToMany
     private List<Taxonomy> taxonomyList;
 
-    public TaxonomyTypes() {
+    public Kirtan() {
     }
 
-    public TaxonomyTypes(Integer id) {
+    public Kirtan(Integer id) {
         this.id = id;
     }
 
-    public TaxonomyTypes(Integer id, String name) {
+    public Kirtan(Integer id, String name, String content) {
         this.id = id;
         this.name = name;
+        this.content = content;
     }
 
     public Integer getId() {
@@ -79,12 +88,12 @@ public class TaxonomyTypes implements Serializable {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getContent() {
+        return content;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setContent(String content) {
+        this.content = content;
     }
 
     @XmlTransient
@@ -106,10 +115,10 @@ public class TaxonomyTypes implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof TaxonomyTypes)) {
+        if (!(object instanceof Kirtan)) {
             return false;
         }
-        TaxonomyTypes other = (TaxonomyTypes) object;
+        Kirtan other = (Kirtan) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
@@ -118,7 +127,7 @@ public class TaxonomyTypes implements Serializable {
 
     @Override
     public String toString() {
-        return "org.dgrf.yamunakinare.db.entities.TaxonomyTypes[ id=" + id + " ]";
+        return "org.dgrf.yamunakinare.db.entities.Kirtan[ id=" + id + " ]";
     }
     
 }

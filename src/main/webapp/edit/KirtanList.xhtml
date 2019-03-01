@@ -9,11 +9,11 @@
     <ui:define name="content">
         <p:growl id="growl" globalOnly="true" sticky="true" showDetail="true" life="5" autoUpdate="true" />
         <f:metadata>
-            <f:viewAction action="#{articleTypeController.fillArticleTypeGrid()}" />
+            <f:viewAction action="#{kirtanListController.fillGrid()}" />
         </f:metadata>
-        <p:dataTable var="articleType" value="#{articleTypeController.articleTypeDTOList}" reflow="true" paginator="true" rows="10">
+        <p:dataTable var="kirtan" value="#{kirtanListController.kirtanList}" reflow="true" paginator="true" rows="10">
             <p:column headerText="Id">
-                <h:outputText value="#{articleType.Id}"></h:outputText>
+                <h:outputText value="#{kirtan.Id}"></h:outputText>
             </p:column>
         </p:dataTable>
     </ui:define>

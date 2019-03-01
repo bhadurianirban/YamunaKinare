@@ -6,15 +6,16 @@
 package org.dgrf.yamunakinare.db.DAO;
 
 import javax.persistence.EntityManagerFactory;
-import org.dgrf.yamunakinare.db.JPA.ArticleTypeJpaController;
+import org.dgrf.yamunakinare.db.JPA.KirtanJpaController;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
-public class ArticleTypeDAO extends ArticleTypeJpaController {
-    
-    public ArticleTypeDAO(EntityManagerFactory emf) {
+
+public class KirtanDAO extends KirtanJpaController{
+
+    public KirtanDAO(EntityManagerFactory emf) {
         super(emf);
     }
     

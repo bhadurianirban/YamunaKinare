@@ -22,7 +22,7 @@ import org.dgrf.yamunakinare.db.entities.TaxonomyTypes;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 public class TaxonomyTypesJpaController implements Serializable {
 
@@ -36,24 +36,28 @@ public class TaxonomyTypesJpaController implements Serializable {
     }
 
     public void create(TaxonomyTypes taxonomyTypes) throws PreexistingEntityException, Exception {
+        if (taxonomyTypes.getTaxonomyList() == null) {
+            taxonomyTypes.setTaxonomyList(new ArrayList<Taxonomy>());
+        }
         EntityManager em = null;
         try {
             em = getEntityManager();
             em.getTransaction().begin();
-            Taxonomy taxonomy = taxonomyTypes.getTaxonomy();
-            if (taxonomy != null) {
-                taxonomy = em.getReference(taxonomy.getClass(), taxonomy.getTaxonomyPK());
-                taxonomyTypes.setTaxonomy(taxonomy);
+            List<Taxonomy> attachedTaxonomyList = new ArrayList<Taxonomy>();
+            for (Taxonomy taxonomyListTaxonomyToAttach : taxonomyTypes.getTaxonomyList()) {
+                taxonomyListTaxonomyToAttach = em.getReference(taxonomyListTaxonomyToAttach.getClass(), taxonomyListTaxonomyToAttach.getTaxonomyPK());
+                attachedTaxonomyList.add(taxonomyListTaxonomyToAttach);
             }
+            taxonomyTypes.setTaxonomyList(attachedTaxonomyList);
             em.persist(taxonomyTypes);
-            if (taxonomy != null) {
-                TaxonomyTypes oldTaxonomyTypesOfTaxonomy = taxonomy.getTaxonomyTypes();
-                if (oldTaxonomyTypesOfTaxonomy != null) {
-                    oldTaxonomyTypesOfTaxonomy.setTaxonomy(null);
-                    oldTaxonomyTypesOfTaxonomy = em.merge(oldTaxonomyTypesOfTaxonomy);
+            for (Taxonomy taxonomyListTaxonomy : taxonomyTypes.getTaxonomyList()) {
+                TaxonomyTypes oldTaxonomyTypesOfTaxonomyListTaxonomy = taxonomyListTaxonomy.getTaxonomyTypes();
+                taxonomyListTaxonomy.setTaxonomyTypes(taxonomyTypes);
+                taxonomyListTaxonomy = em.merge(taxonomyListTaxonomy);
+                if (oldTaxonomyTypesOfTaxonomyListTaxonomy != null) {
+                    oldTaxonomyTypesOfTaxonomyListTaxonomy.getTaxonomyList().remove(taxonomyListTaxonomy);
+                    oldTaxonomyTypesOfTaxonomyListTaxonomy = em.merge(oldTaxonomyTypesOfTaxonomyListTaxonomy);
                 }
-                taxonomy.setTaxonomyTypes(taxonomyTypes);
-                taxonomy = em.merge(taxonomy);
             }
             em.getTransaction().commit();
         } catch (Exception ex) {
@@ -74,31 +78,38 @@ public class TaxonomyTypesJpaController implements Serializable {
             em = getEntityManager();
             em.getTransaction().begin();
             TaxonomyTypes persistentTaxonomyTypes = em.find(TaxonomyTypes.class, taxonomyTypes.getId());
-            Taxonomy taxonomyOld = persistentTaxonomyTypes.getTaxonomy();
-            Taxonomy taxonomyNew = taxonomyTypes.getTaxonomy();
+            List<Taxonomy> taxonomyListOld = persistentTaxonomyTypes.getTaxonomyList();
+            List<Taxonomy> taxonomyListNew = taxonomyTypes.getTaxonomyList();
             List<String> illegalOrphanMessages = null;
-            if (taxonomyOld != null && !taxonomyOld.equals(taxonomyNew)) {
-                if (illegalOrphanMessages == null) {
-                    illegalOrphanMessages = new ArrayList<String>();
+            for (Taxonomy taxonomyListOldTaxonomy : taxonomyListOld) {
+                if (!taxonomyListNew.contains(taxonomyListOldTaxonomy)) {
+                    if (illegalOrphanMessages == null) {
+                        illegalOrphanMessages = new ArrayList<String>();
+                    }
+                    illegalOrphanMessages.add("You must retain Taxonomy " + taxonomyListOldTaxonomy + " since its taxonomyTypes field is not nullable.");
                 }
-                illegalOrphanMessages.add("You must retain Taxonomy " + taxonomyOld + " since its taxonomyTypes field is not nullable.");
             }
             if (illegalOrphanMessages != null) {
                 throw new IllegalOrphanException(illegalOrphanMessages);
             }
-            if (taxonomyNew != null) {
-                taxonomyNew = em.getReference(taxonomyNew.getClass(), taxonomyNew.getTaxonomyPK());
-                taxonomyTypes.setTaxonomy(taxonomyNew);
+            List<Taxonomy> attachedTaxonomyListNew = new ArrayList<Taxonomy>();
+            for (Taxonomy taxonomyListNewTaxonomyToAttach : taxonomyListNew) {
+                taxonomyListNewTaxonomyToAttach = em.getReference(taxonomyListNewTaxonomyToAttach.getClass(), taxonomyListNewTaxonomyToAttach.getTaxonomyPK());
+                attachedTaxonomyListNew.add(taxonomyListNewTaxonomyToAttach);
             }
+            taxonomyListNew = attachedTaxonomyListNew;
+            taxonomyTypes.setTaxonomyList(taxonomyListNew);
             taxonomyTypes = em.merge(taxonomyTypes);
-            if (taxonomyNew != null && !taxonomyNew.equals(taxonomyOld)) {
-                TaxonomyTypes oldTaxonomyTypesOfTaxonomy = taxonomyNew.getTaxonomyTypes();
-                if (oldTaxonomyTypesOfTaxonomy != null) {
-                    oldTaxonomyTypesOfTaxonomy.setTaxonomy(null);
-                    oldTaxonomyTypesOfTaxonomy = em.merge(oldTaxonomyTypesOfTaxonomy);
+            for (Taxonomy taxonomyListNewTaxonomy : taxonomyListNew) {
+                if (!taxonomyListOld.contains(taxonomyListNewTaxonomy)) {
+                    TaxonomyTypes oldTaxonomyTypesOfTaxonomyListNewTaxonomy = taxonomyListNewTaxonomy.getTaxonomyTypes();
+                    taxonomyListNewTaxonomy.setTaxonomyTypes(taxonomyTypes);
+                    taxonomyListNewTaxonomy = em.merge(taxonomyListNewTaxonomy);
+                    if (oldTaxonomyTypesOfTaxonomyListNewTaxonomy != null && !oldTaxonomyTypesOfTaxonomyListNewTaxonomy.equals(taxonomyTypes)) {
+                        oldTaxonomyTypesOfTaxonomyListNewTaxonomy.getTaxonomyList().remove(taxonomyListNewTaxonomy);
+                        oldTaxonomyTypesOfTaxonomyListNewTaxonomy = em.merge(oldTaxonomyTypesOfTaxonomyListNewTaxonomy);
+                    }
                 }
-                taxonomyNew.setTaxonomyTypes(taxonomyTypes);
-                taxonomyNew = em.merge(taxonomyNew);
             }
             em.getTransaction().commit();
         } catch (Exception ex) {
@@ -130,12 +141,12 @@ public class TaxonomyTypesJpaController implements Serializable {
                 throw new NonexistentEntityException("The taxonomyTypes with id " + id + " no longer exists.", enfe);
             }
             List<String> illegalOrphanMessages = null;
-            Taxonomy taxonomyOrphanCheck = taxonomyTypes.getTaxonomy();
-            if (taxonomyOrphanCheck != null) {
+            List<Taxonomy> taxonomyListOrphanCheck = taxonomyTypes.getTaxonomyList();
+            for (Taxonomy taxonomyListOrphanCheckTaxonomy : taxonomyListOrphanCheck) {
                 if (illegalOrphanMessages == null) {
                     illegalOrphanMessages = new ArrayList<String>();
                 }
-                illegalOrphanMessages.add("This TaxonomyTypes (" + taxonomyTypes + ") cannot be destroyed since the Taxonomy " + taxonomyOrphanCheck + " in its taxonomy field has a non-nullable taxonomyTypes field.");
+                illegalOrphanMessages.add("This TaxonomyTypes (" + taxonomyTypes + ") cannot be destroyed since the Taxonomy " + taxonomyListOrphanCheckTaxonomy + " in its taxonomyList field has a non-nullable taxonomyTypes field.");
             }
             if (illegalOrphanMessages != null) {
                 throw new IllegalOrphanException(illegalOrphanMessages);

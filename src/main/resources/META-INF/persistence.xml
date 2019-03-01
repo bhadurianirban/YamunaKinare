@@ -8,6 +8,12 @@
     <class>org.dgrf.yamunakinare.db.entities.ArticleType</class>
     <class>org.dgrf.yamunakinare.db.entities.TaxonomyTypes</class>
     <class>org.dgrf.yamunakinare.db.entities.Taxonomy</class>
+    <class>org.dgrf.yamunakinare.entities.Bishoy</class>
+    <class>org.dgrf.yamunakinare.entities.TaxonomyTypes</class>
+    <class>org.dgrf.yamunakinare.entities.Taxonomy</class>
+    <class>org.dgrf.yamunakinare.entities.Kirtan</class>
+    <class>org.dgrf.yamunakinare.db.entities.Kirtan</class>
+    <class>org.dgrf.yamunakinare.db.entities.Bishoy</class>
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <properties>
       <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/yamunadata?zeroDateTimeBehavior=convertToNull"/>
